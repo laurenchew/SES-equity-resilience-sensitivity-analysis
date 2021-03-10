@@ -36,8 +36,8 @@ R_max #total resource amount, defined in production function
 
 '''
 
-r_range = [1.5, 100]
-c_range = [0, 0.5]
+r_range = [1.5, 10.5]
+c_range = [0, 0.05]
 d_range = [95, 225]
 g_range = [0, 0.02]
 h_range = [0, 120]
