@@ -61,15 +61,16 @@ m = 0.8 # responsiveness of population to wellbeing (h*p > 1 with dt=1)
 # Step size
 dt = 0.08
 
+#State variables
 R_0 = 100
 U_0 = 10
 W_0 = 4
 W_min = 0
 
-num_points = 20 #originally 80
+num_points = 10 #originally 80
 
 def alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
-                          W_min, dt, R_0, W_0, U_0, adjustment=0, param='none'): # alter ['r','c','d','g','h','m','p']
+                          W_min, dt, R_0, W_0, U_0, adjustment=1, param='none'): # alter ['r','c','d','g','h','m','p']
 
   if 'r' in param :
     r *= adjustment
@@ -91,7 +92,7 @@ def alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
   R = np.array(R)
 
   # set initial conditions to loop over
-  np.random.seed(1)
+  np.random.seed(234)
   initial_points = doe.lhs(3, samples = num_points)
   sust_eq = 0
   # initialize matrix recording whether initial point leads to good or bad eq
@@ -129,23 +130,122 @@ def alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
     # print(resilience, equity)
   return resilience, equity
 
-resilience, equity = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
-                          W_min, dt, R_0, W_0, U_0, adjustment=1.1, param = 'none')
-resilience_r, equity_r = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
-                          W_min, dt, R_0, W_0, U_0, adjustment=1.1, param = 'r')
+
+# plt.plot(np.arange(num_points)*dt,equity_r, label='r increased by 10%', color='#7494aa', linestyle='', markersize=10)
+colors = ['#a9aa83','#7494aa','#374b5f', '#887e87', '#bda27b','#a47c6b' ]
+
+
+def add_to_scatter(x,a,param, i):
+
+  if a > 1:
+    adjustment = (a - 1) * 100
+    string = f'increased by {adjustment:.0f}%'
+  elif a < 1 and a > 0:
+    adjustment = (1 - a) * 100
+    string = f'decreased by {adjustment:.0f}%'
+  elif a == 1:
+    param = "No parameters"
+    string = 'altered'
+
+  plt.plot(np.arange(num_points)*dt, x, label=f'{param} {string}', color=colors[i], linestyle='', markersize=10, alpha=0.5)
+
+# a_array = [0.6, 0.8, 1, 1.1, 1.2]
+# for i, a in enumerate(a_array):
+#   print(i, a)
+#   parameter = 'a'
+#   resilience, equity = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
+#                           W_min, dt, R_0, W_0, U_0, adjustment=a, param=parameter)
+#   add_to_scatter(equity, a, parameter, i)
+
+# plt.title('Equity')
+# plt.legend()
+
+# plt.figure()
+# c_array = [0.8, 1, 1.1, 1.2]
+# for i, a in enumerate(c_array):
+#   print(i, a)
+#   parameter = 'c'
+#   resilience, equity = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
+#                           W_min, dt, R_0, W_0, U_0, adjustment=a, param=parameter)
+#   add_to_scatter(equity, a, parameter, i)
+
+# plt.title('Equity')
+# plt.legend()
+
+# plt.figure()
+# d_array = [ 1, 1.1, 1.2]
+# for i, a in enumerate(d_array):
+#   print(i, a)
+#   parameter = 'd'
+#   resilience, equity = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
+#                           W_min, dt, R_0, W_0, U_0, adjustment=a, param=parameter)
+#   add_to_scatter(equity, d, parameter, i)
+
+dictionary = {'r': [0.4, 0.6, 0.8, 1],
+              'c': [0.8, 1, 2, 3, 4],
+              'd': [1, 1.2, 1.4, 1.6, 1.8],
+              'g': [0.6, 1, 1.4, 1.8],
+              'h': [1, 1.1, 2, 4],
+              'm': [0.5, 1, 2, 3],
+              'p': [1, 2, 3, 4],   
+              }
+for key in dictionary:
+  # plt.figure()
+  parameter = key
+  item = dictionary[key]
+  for i, adjustment in enumerate(item):
+    resilience, equity = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
+                          W_min, dt, R_0, W_0, U_0, adjustment=adjustment, param=parameter)
+    plt.figure(1)  
+    add_to_scatter(equity, adjustment, parameter, i)
+
+    plt.figure(2)
+    add_to_scatter(resilience, adjustment, parameter, i)
+ 
+  plt.figure(1)  
+  plt.title('Equity') 
+  plt.legend()  
+  plt.savefig(f'figures/equity-{key}-parameter-altered.png')
+
+  plt.figure(2)
+  plt.title('Resilience')
+  plt.legend()
+  plt.savefig(f'figures/reilience-{key}-parameter-altered.png')
+
+# plt.show()
+
+exit()
+# resilience_c, equity_c = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
+#                           W_min, dt, R_0, W_0, U_0, adjustment=a, param = 'c')
+
+# resilience_d, equity_d = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
+#                           W_min, dt, R_0, W_0, U_0, adjustment=a, param = 'd')
 
 plt.subplot(2,1,1)
-plt.plot(np.arange(num_points)*dt,resilience, label='No alteration', color='#a9aa83', linestyle='', markersize=12)
-plt.plot(np.arange(num_points)*dt,resilience_r, label='r altered', color='#7494aa', linestyle='', markersize=12)
-# plt.plot(np.arange(num_points)*dt,resilience_r, label='r altered', color='#374b5f', linestyle='', markersize=12) #887e87 #bda27b #a47c6b
+plt.title('Resilience')
+plt.plot(np.arange(num_points)*dt,resilience, label='No alteration', color='#a9aa83', linestyle='', markersize=10)
+plt.plot(np.arange(num_points)*dt,resilience_r, label='r increased by 10%', color='#7494aa', linestyle='', markersize=10)
+plt.plot(np.arange(num_points)*dt,resilience_c, label='c increased by 10%', color='#374b5f', linestyle='', markersize=10) 
+plt.plot(np.arange(num_points)*dt,resilience_d, label='d increased by 10%', color='#887e87', linestyle='', markersize=10) #bda27b #a47c6b
 plt.legend()
 
 plt.subplot(2,1,2)
-plt.plot(np.arange(num_points)*dt,equity,label='No alteration', color='#a9aa83', linestyle='', markersize=12)
-plt.plot(np.arange(num_points)*dt,equity_r,label='r altered', color='#7494aa', linestyle='', markersize=12 )
+plt.title('Equity')
+plt.plot(np.arange(num_points)*dt,equity,label='No alteration', color='#a9aa83', linestyle='', markersize=10)
+plt.plot(np.arange(num_points)*dt,equity_r,label='r increased by 10%', color='#7494aa', linestyle='', markersize=10 )
+plt.plot(np.arange(num_points)*dt,equity_c, label='c increased by 10%', color='#374b5f', linestyle='', markersize=10)
+plt.plot(np.arange(num_points)*dt,equity_d, label='d increased by 10%', color='#887e87', linestyle='', markersize=10)
 plt.legend()
 plt.show()
+
+
+
 exit()
+
+
+
+
+
 
 def plot_trajectories(R, U):
   n = len(R)
