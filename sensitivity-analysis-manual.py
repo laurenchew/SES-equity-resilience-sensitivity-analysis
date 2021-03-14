@@ -16,7 +16,7 @@ d = 100 # fixed cost parameter in profit function, [95, 225]
 k = 2 # benefit of resource access in exponential parameter, []
 p = 3 #profit, out-of-system payoff for domestic users, [2.7, 18]
 h = 0.06  # parameter modulating rate at which wage increases with marginal benefit of additional labor, [0,120]
-g = 0.01 # parameter modulating rate at which wage decreases with excess labor, [1, 0.02]
+g = 0.01 # parameter modulating rate at which wage decreases with excess labor, [0, 0.02]
 m = 0.8 # responsiveness of domestic users to payoff difference, [0.3, 12.3]
 
 q = -0.5 #substituttion parameter to reflect limited substitutability between resource and labor, do not vary
@@ -67,7 +67,17 @@ U_0 = 10
 W_0 = 4
 W_min = 0
 
-num_points = 10 #originally 80
+num_points = 20 #originally 80
+
+size = 14
+params = {'legend.fontsize': size,
+          'figure.figsize': (11,6),
+          'axes.labelsize': size,
+          'axes.titlesize': size,
+          'xtick.labelsize': size,#*0.75,
+          'ytick.labelsize': size,#*0.75,
+          'axes.titlepad': 20}
+plt.rcParams.update(params)
 
 def alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
                           W_min, dt, R_0, W_0, U_0, adjustment=1, param='none'): # alter ['r','c','d','g','h','m','p']
@@ -92,7 +102,7 @@ def alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
   R = np.array(R)
 
   # set initial conditions to loop over
-  np.random.seed(234)
+  np.random.seed(1)
   initial_points = doe.lhs(3, samples = num_points)
   sust_eq = 0
   # initialize matrix recording whether initial point leads to good or bad eq
@@ -104,7 +114,7 @@ def alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
 
   for n, point in enumerate(initial_points): 
 
-    if n % 10 == 0:
+    if n % 2 == 0:
       print(n)
 
     R_0 = point[0]
@@ -125,69 +135,40 @@ def alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
     R_array[n] = R[-1]
 
     resilience[n] = sust_eq / len(initial_points) # proportion of states that lead to non-collapse equilibrium
-    equity[n] = np.mean(U_array) #total well being  #(previously resilience)
-
+    equity[n] = np.mean(U_array) #total well being  
     # print(resilience, equity)
   return resilience, equity
 
 
 # plt.plot(np.arange(num_points)*dt,equity_r, label='r increased by 10%', color='#7494aa', linestyle='', markersize=10)
-colors = ['#a9aa83','#7494aa','#374b5f', '#887e87', '#bda27b','#a47c6b' ]
-
+# colors = ['#3672dd','#7494aa','#374b5f', '#887e87', '#bda27b','#a47c6b' ]
+# colors = ['#D98FD4', '#C1D4D9','#92A4A6','#FFDA1A','#BF8069', '#E64B1E']
+colors = ['#D98FD4', '#649EDB', '#C1D4D9','#92A4A6','#FFDA1A','#F09975', '#E64B1E']
 
 def add_to_scatter(x,a,param, i):
 
   if a > 1:
     adjustment = (a - 1) * 100
     string = f'increased by {adjustment:.0f}%'
-  elif a < 1 and a > 0:
+  elif a < 1 and a >= 0:
     adjustment = (1 - a) * 100
     string = f'decreased by {adjustment:.0f}%'
   elif a == 1:
     param = "No parameters"
     string = 'altered'
 
-  plt.plot(np.arange(num_points)*dt, x, label=f'{param} {string}', color=colors[i], linestyle='', markersize=10, alpha=0.5)
+  plt.plot(np.arange(num_points)*dt, x, label=f'{param} {string}', color=colors[i], linestyle='', markersize=10, alpha=0.8)
 
-# a_array = [0.6, 0.8, 1, 1.1, 1.2]
-# for i, a in enumerate(a_array):
-#   print(i, a)
-#   parameter = 'a'
-#   resilience, equity = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
-#                           W_min, dt, R_0, W_0, U_0, adjustment=a, param=parameter)
-#   add_to_scatter(equity, a, parameter, i)
 
-# plt.title('Equity')
-# plt.legend()
 
-# plt.figure()
-# c_array = [0.8, 1, 1.1, 1.2]
-# for i, a in enumerate(c_array):
-#   print(i, a)
-#   parameter = 'c'
-#   resilience, equity = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
-#                           W_min, dt, R_0, W_0, U_0, adjustment=a, param=parameter)
-#   add_to_scatter(equity, a, parameter, i)
-
-# plt.title('Equity')
-# plt.legend()
-
-# plt.figure()
-# d_array = [ 1, 1.1, 1.2]
-# for i, a in enumerate(d_array):
-#   print(i, a)
-#   parameter = 'd'
-#   resilience, equity = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
-#                           W_min, dt, R_0, W_0, U_0, adjustment=a, param=parameter)
-#   add_to_scatter(equity, d, parameter, i)
-
-dictionary = {'r': [0.4, 0.6, 0.8, 1],
-              'c': [0.8, 1, 2, 3, 4],
-              'd': [1, 1.2, 1.4, 1.6, 1.8],
-              'g': [0.6, 1, 1.4, 1.8],
-              'h': [1, 1.1, 2, 4],
-              'm': [0.5, 1, 2, 3],
-              'p': [1, 2, 3, 4],   
+dictionary = {
+              'r': [0.4, 0.6, 0.8, 0.9, .95, 1],
+              # 'c': [0,0.4, 0.6,0.8, 1],
+              'd': [1,1.05, 1.1, 1.2, 1.4, 1.6],
+              # 'g': [0.6, 1, 1.4, 1.8, 2],
+              # 'h': [1, 1.1, 2, 4],
+              # 'm': [0.5, 1, 2, 3],
+              # 'p': [.9, .95, 1, 1.05, 1.1],   
               }
 for key in dictionary:
   # plt.figure()
@@ -210,59 +191,12 @@ for key in dictionary:
   plt.figure(2)
   plt.title('Resilience')
   plt.legend()
-  plt.savefig(f'figures/reilience-{key}-parameter-altered.png')
+  plt.savefig(f'figures/resilience-{key}-parameter-altered.png')
+
+  plt.figure(1).clear(True)
+  plt.figure(2).clear(True)
 
 # plt.show()
-
-exit()
-# resilience_c, equity_c = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
-#                           W_min, dt, R_0, W_0, U_0, adjustment=a, param = 'c')
-
-# resilience_d, equity_d = alter_parameter(r, R_max, a, b1, b2, q, c, d, k, p, h, g, m,
-#                           W_min, dt, R_0, W_0, U_0, adjustment=a, param = 'd')
-
-plt.subplot(2,1,1)
-plt.title('Resilience')
-plt.plot(np.arange(num_points)*dt,resilience, label='No alteration', color='#a9aa83', linestyle='', markersize=10)
-plt.plot(np.arange(num_points)*dt,resilience_r, label='r increased by 10%', color='#7494aa', linestyle='', markersize=10)
-plt.plot(np.arange(num_points)*dt,resilience_c, label='c increased by 10%', color='#374b5f', linestyle='', markersize=10) 
-plt.plot(np.arange(num_points)*dt,resilience_d, label='d increased by 10%', color='#887e87', linestyle='', markersize=10) #bda27b #a47c6b
-plt.legend()
-
-plt.subplot(2,1,2)
-plt.title('Equity')
-plt.plot(np.arange(num_points)*dt,equity,label='No alteration', color='#a9aa83', linestyle='', markersize=10)
-plt.plot(np.arange(num_points)*dt,equity_r,label='r increased by 10%', color='#7494aa', linestyle='', markersize=10 )
-plt.plot(np.arange(num_points)*dt,equity_c, label='c increased by 10%', color='#374b5f', linestyle='', markersize=10)
-plt.plot(np.arange(num_points)*dt,equity_d, label='d increased by 10%', color='#887e87', linestyle='', markersize=10)
-plt.legend()
-plt.show()
-
-
-
-exit()
-
-
-
-
-
-
-def plot_trajectories(R, U):
-  n = len(R)
-  T = n*dt
-  fig, axarr = plt.subplots(2)
-  axarr[0].plot(np.arange(n)*dt, R, color = 'k')
-  axarr[0].set_ylim([0, R_max])
-  axarr[0].set_title('Resource')
-  axarr[1].plot(np.arange(n)/(n/T), U, color = 'k')
-  axarr[1].set_title('Population')
-  axarr[1].set_ylim([0, 30])
-  plt.tight_layout()
-  patches = [mlines.Line2D([], [], color = 'k', linestyle = '-', linewidth=1, label='No Policy'),
-             mlines.Line2D([], [], color = 'c', linestyle = '-', linewidth=1, label='Under a Fine')]
-  fig.legend(handles=patches, bbox_to_anchor=(0.99, 1), borderaxespad=0. )
-
-plot_trajectories(R,U)
 
 exit()
 
@@ -336,7 +270,7 @@ def SES_model(x):
       eq_condition[n] = 1
       sust_eq += 1
 
-    U_array[n] = U[-1] #np.mean(U) # population (pseudo for resilience)
+    U_array[n] = U[-1] # population (pseudo for resilience)
 
   resilience = sust_eq / len(initial_points) # proportion of states that lead to non-collapse equilibrium
   equity = np.mean(U_array) #total well being  #(previously resilience)
